@@ -1,35 +1,29 @@
 var express = require('express');
 var router = express.Router();
-const fs = require('fs');
-const bodyParser = require('body-parser');
+const bodyParser = require('body-parser')
+const connection = require('../database/connect');
 
-router.post('/', (req, res, next)=>{
-    console.log(req.body.playtime);
-    const Want_Data = {
-        "sports": req.body.sports,
-        "date": req.body.date,
-        "starttime": req.body.starttime,
-        "playtime": req.body.playtime,
-        "place": req.body.place,
-        "comment": req.body.comment
+router.post('/data', async (req, res, next)=>{
+    const sql = 'INSERT INTO find (sports, date, playtime, group_limit, group_member, comment, start_time, end_time, register_user_id, place) VALUES (?,?,?,?,?,?,?,?,?,?) '
+    const reqbody = await req.body
+    const params = []
+    console.log(reqbody)
+    for(key in reqbody){
+        let value = reqbody[key]
+        params.push(`${value}`)
     }
-    //일단은 database를 사용하기 전이므로, 그냥 비효율적인 방식으로 json file에 data를 넣자.
-    fs.readFile('./data/WantList.json', (err, data)=>{
-        console.log("entered readfile method")
+    console.log(params)
+    connection.query(sql, params, (err, data, fields)=>{
         if(err){
-            console.error(err);
-            return;
+            console.log(err)
+            res.status(404)
         }
-        const wantlist = JSON.parse(data);
-        console.log(wantlist);
-    console.log(`datatype of wantlist is ${typeof wantlist}, datatype of Want_Data is ${typeof Want_Data}`);
-    const newlist = wantlist.push(Want_Data);
-    console.log("hello",newlist);
-    res.status(200);
-    res.send("successfuly added to the database!");// I didn't really added to the WantList.json. I will modify this part when 
-    //we connect with the database.
+        else{res.status(200)
+        console.log(data)
+        console.log("entered connection")
+        res.send("hello")
+        }
     })
-
 
 })
 
