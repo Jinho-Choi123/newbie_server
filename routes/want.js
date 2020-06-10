@@ -4,7 +4,7 @@ const bodyParser = require('body-parser')
 const connection = require('../database/connect');
 
 router.post('/data', async (req, res, next)=>{
-    const sql = 'INSERT INTO find (sports, date, playtime, group_limit, group_member, comment, start_time, end_time, register_user_id, place) VALUES (?,?,?,?,?,?,?,?,?,?) '
+    const sql = 'INSERT INTO find (sports, date, group_limit, comment, start_time, end_time, place, group_member, register_user_id) VALUES (?,?,?,?,?,?,?,?,0,?) '
     const reqbody = await req.body
     const params = []
     console.log(reqbody)
