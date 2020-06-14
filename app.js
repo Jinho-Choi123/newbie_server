@@ -4,30 +4,30 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const cors = require('cors');
-
-const mainRouter = require('./routes/main');
-const registerRouter = require('./routes/register');
-const findRouter = require('./routes/find');
-const wantRouter = require('./routes/want');
 const app = express();
+const bodyParser = require('body-parser')
+
+//parse JSON and url-encoded query
+app.use(bodyParser.urlencoded({extended: false}))
+app.use(bodyParser.json())
+
+//set the secret key variable for jwt
+const config = require('./config/config')
+app.set('jwt-secret', config.secret)
+
+//importing Routers
+app.use('/', require('./routes'))
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hbs');
+app.set('view engine', 'ejs');
 
 app.use(cors())
 app.use(logger('dev'));
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-
-//Router
-app.use('/', mainRouter);
-app.use('/register', registerRouter);
-app.use('/find', findRouter)
-app.use('/want', wantRouter)
 
 // catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -45,6 +45,7 @@ app.use(function(err, req, res, next) {
   res.render('error');
 });
 
-app.listen(process.env.PORT || 8080);
+const PORT = process.env.PORT ||8080
+app.listen(PORT, console.log(`Server started at port ${PORT}`));
 
 module.exports = app;
