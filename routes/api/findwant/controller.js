@@ -1,47 +1,94 @@
 const connection = require('../../../database/connect');
-
+const jwt = require('jsonwebtoken');
+const e = require('express');
 /*==============================
         Finding data from db
         POST /
 ==============================*/
-exports.find =  async (req, res, next)=>{
-    // const input_sports = await req.body.sport;
-    // const input_date = await req.body.date;
+exports.find =  (req, res)=>{
+    //one or more req.body value is required. ex) sport: "", date: "2020-06-15" is OK.
     const {sport, date} = req.body
-    connection.query(`SELECT id, sports, date_format(date,'%Y-%m-%d') date, place, group_member, group_limit, playtime , start_time, end_time, comment FROM find WHERE sports='${sport}' AND date_format(date,'%Y-%m-%d') = '${date}'`, (err, result, fields) =>{
+    connection.query(`SELECT id, sports, date_format(date,'%Y-%m-%d') as date, place, group_limit, group_member, comment, start_time, end_time FROM find WHERE sports='${sport}' OR date_format(date,'%Y-%m-%d') = '${date}'`, (err, result, fields) =>{
         if(err){
             console.log(err)
-            res.status(403).json(err)
+            res.status(403).json({
+                message: "Error finding data. Please try it again."
+            })
         }
         else{
-            console.log("received request")
-            res.status(200);
-            res.json(JSON.stringify(result))
+            res.status(200).json({
+                data: result,
+                message: "Searching success."
+            })
         }
     })  
 }
 
 /*===================================
-        POST want list
-=====================================*/
-exports.want = async (req, res, next)=>{
-    //need to modify group member part. this part needs an login!!!!
-    const sql = 'INSERT INTO find (sports, date, group_limit, comment, start_time, end_time, place, group_member, register_user_id) VALUES (?,?,?,?,?,?,?,?,0,?) '
-    const reqbody = await req.body
-    const params = []
-    for(key in reqbody){
-        let value = reqbody[key]
-        params.push(`${value}`)
-    }
-    connection.query(sql, params, (err, data, fields)=>{
+        POST /findwant/accompany
+        : if we click accompany button, then user info. will be stored in finddatabase.
+====================================*/
+
+exports.accompany = async (req, res) => { 
+    console.log("in accompany")
+    const ID = await req.body.id // the id of table find.
+    console.log(ID)
+    const studentId = await req.token.studentId
+    console.log(studentId)
+    //See if user is already accompanied to the POST
+    connection.query(`SELECT id, accompany FROM find WHERE JSON_CONTAINS(accompany, '"${studentId}"')`, (err, result, field)=>{
         if(err){
             console.log(err)
-            res.status(404)
+            return res.status(403).json({
+                message: "Accompany Failed. Please try it again."
+            })
         }
-        else{res.status(200)
-        console.log(data)
-        res.send("hello")
-        }
-    })
+        if(result.length>0){
+                for(let i = 0 ; i< result.length ; i++){
+                    if(result[i].id == ID){
+                        console.log(result[i].id)
+                        return res.status(200).json({
+                            message: "You already accompanied. Don't have to do it again"
+                        })
+                    }
+                }}
+                            //first time accomany the POST ADD studentId info to database
+                console.log(ID)
+                connection.query(`UPDATE find SET accompany=JSON_MERGE(accompany, JSON_ARRAY('${studentId}')), group_member=group_member+1 WHERE id = "${ID}"`,(err, data, field) =>{
+                    if(err){
+                        console.log(err)
+                        return res.status(403).json({
+                            message: "Accompany Failed. Please try it again."
+                        })
+                        }
+                        console.log("hhh", data, "hhh")
+                        res.status(200).json({
+                            message: "Accompany Success!!"
+                        })
+                    })
+                    })}
+        
 
+/*===================================
+        POST want list
+=====================================*/
+exports.want = (req, res)=>{
+    console.log("in want")
+    const {sports, date, group_limit, place, comment, start_time, end_time} = req.body 
+    console.log(req.token)
+    const post_userId = req.token.studentId
+    //post_userId is the studentId of the users table.
+    connection.query(`INSERT INTO find (sports, date, group_limit, comment, start_time, end_time, place, post_studentId) VALUES (?,?,?,?,?,?,?,?)`,
+    [sports, date, group_limit, comment, start_time, end_time, place, post_userId], (err, result, field)=>{
+        if(err){
+            console.log(err)
+            return res.status(202).json({
+                message: "Failed to POST. Try it again"
+            })
+        }
+        console.log("succes")
+            res.status(200).json({
+                message: "Successfully POST."
+            })
+    })
 }

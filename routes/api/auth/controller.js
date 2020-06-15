@@ -15,7 +15,23 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
 exports.register = (req, res) =>{
-    const {username, studentId, userId} = req.body 
+    console.log("in register router")
+    console.log(req.body)
+    const {username, studentId, userId, password, password2} = req.body 
+    console.log(username)
+    //if password is short or not same, then respond an error 
+    if(password.length<6 || password2.length<6){
+        return res.status(200).json({
+            message: "password is too short. It must be at least 6 characters long"
+        })
+    }
+    if(password !== password2){
+        return res.status(200).json({
+            message: "password doesn't match. Please check it again."
+        })
+    }
+
+
     bcrypt.hash(req.body.password, 10, (err, password) =>{
     let newUser = null 
     const create = (user) => {
@@ -58,8 +74,8 @@ exports.register = (req, res) =>{
     }
 
     const respond = (isAdmin) => {
-        res.json({
-            message: 'registered successfully',
+        res.status(200).json({
+            message: 'registered success',
             admin: isAdmin ? true: false 
         })
     }
@@ -96,18 +112,21 @@ exports.register = (req, res) =>{
         POST /api/auth/login
 ===================================*/
 exports.login = (req, res) => {
+    console.log("in login routeer")
     const {userId, password} = req.body 
     const secret = req.app.get('jwt-secret')
 
     //check the user info and generate the jwt
     const check = (user) => {
         if(!user) {
-            throw new Error('login failed')
+            return res.status(202).json({
+                message: "login failed"
+            })
         }
         else{
             //user exists, check the password
             return new Promise((resolve, reject) => {
-                connection.query(`SELECT username, userId, password, admin FROM users WHERE userId='${userId}'`, (err, result, field) =>{
+                connection.query(`SELECT username, userId, password, studentId, admin FROM users WHERE userId='${userId}'`, (err, result, field) =>{
                     bcrypt.compare(password, result[0].password, (err, data) =>{
                         if(err){
                             throw new Error('login failed')
@@ -116,7 +135,7 @@ exports.login = (req, res) => {
                             if(data){
                                 jwt.sign(
                                             {
-                                                userId: result[0].userId,
+                                                studentId: result[0].studentId,
                                                 username: result[0].username,
                                                 admin: result[0].admin
                                             },
@@ -135,7 +154,7 @@ exports.login = (req, res) => {
                                             }
                                         )
                             } else{
-                                throw new Error('login failed')
+                                reject('Login failed')
                             }
                         }
                     })
@@ -145,13 +164,14 @@ exports.login = (req, res) => {
     }
 
     const respond = (tokens) =>{
-        res.json({
-            message: 'login in successfully',
+        res.status(200).json({
+            message: 'login in success',
             tokens
         })
     }
 
     const onError = (error) =>{
+        console.log(error)
         res.status(403).json({
             message: error.message
         })
@@ -187,4 +207,10 @@ exports.check = (req, res) => {
         info: req.token
     })
 
+}
+
+exports.authenticate = (req, res) => {
+    res.json({
+        success:true
+    })
 }

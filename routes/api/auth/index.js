@@ -14,4 +14,8 @@ router.use('/check', authMiddlewares)
 
 router.get('/check', controller.check)
 
+router.get('/authenticate', authMiddlewares)
+
+router.get('/authenticate', controller.authenticate)
+
 module.exports = router

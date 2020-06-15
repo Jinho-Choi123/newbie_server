@@ -9,4 +9,5 @@ router.post('/find', controller.find)
 
 router.post('/want', controller.want)
 
+router.post('/accompany', controller.accompany)
 module.exports = router
