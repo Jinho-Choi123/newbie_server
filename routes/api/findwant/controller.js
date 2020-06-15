@@ -73,20 +73,16 @@ exports.accompany = async (req, res) => {
         POST want list
 =====================================*/
 exports.want = (req, res)=>{
-    console.log("in want")
     const {sports, date, group_limit, place, comment, start_time, end_time} = req.body 
-    console.log(req.token)
     const post_userId = req.token.studentId
     //post_userId is the studentId of the users table.
     connection.query(`INSERT INTO find (sports, date, group_limit, comment, start_time, end_time, place, post_studentId) VALUES (?,?,?,?,?,?,?,?)`,
     [sports, date, group_limit, comment, start_time, end_time, place, post_userId], (err, result, field)=>{
         if(err){
-            console.log(err)
             return res.status(202).json({
                 message: "Failed to POST. Try it again"
             })
         }
-        console.log("succes")
             res.status(200).json({
                 message: "Successfully POST."
             })

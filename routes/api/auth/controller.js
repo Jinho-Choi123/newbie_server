@@ -15,10 +15,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
 exports.register = (req, res) =>{
-    console.log("in register router")
-    console.log(req.body)
     const {username, studentId, userId, password, password2} = req.body 
-    console.log(username)
     //if password is short or not same, then respond an error 
     if(password.length<6 || password2.length<6){
         return res.status(200).json({
@@ -112,7 +109,6 @@ exports.register = (req, res) =>{
         POST /api/auth/login
 ===================================*/
 exports.login = (req, res) => {
-    console.log("in login routeer")
     const {userId, password} = req.body 
     const secret = req.app.get('jwt-secret')
 
@@ -171,7 +167,6 @@ exports.login = (req, res) => {
     }
 
     const onError = (error) =>{
-        console.log(error)
         res.status(403).json({
             message: error.message
         })
@@ -210,7 +205,7 @@ exports.check = (req, res) => {
 }
 
 exports.authenticate = (req, res) => {
-    res.json({
+    res.status(200).json({
         success:true
     })
 }

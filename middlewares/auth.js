@@ -5,14 +5,15 @@ const authMiddleware = (req, res, next) => {
     const token = req.headers['x-access-token'] || req.query.token 
     //token doesnt exist
     if(!token){
-        return res.redirect('https://localhost:8080/auth/login')
+        return res.redirect('sparcs@/auth/login')
     }
     //promise that decodes token
     function decode (callback) {
         return new Promise ((resolve, reject) => {
             jwt.verify(token, req.app.get('jwt-secret'), (err, decode) => {
                 if(err) {
-                    reject(err)}
+                    reject(err)
+                }
                 else {
                     resolve(decode)}
             })
@@ -20,9 +21,10 @@ const authMiddleware = (req, res, next) => {
     }
 
     const onError = (err) => {
+        console.log(err)
         res.status(403).json({
             success: false,
-            message: error.message
+            message: err.message
         })
     }
 

@@ -37,9 +37,7 @@ exports.modify = (req, res) => {
 
 //deleting POST
 exports.delete = (req, res) => {
-    console.log("in delete")
     const {id} = req.body
-    console.log(id)
     connection.query(`DELETE FROM find WHERE id='${id}'`, (err, result, field) => {
         if(err){
             return res.status(403).json({
